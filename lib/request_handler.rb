@@ -1,4 +1,4 @@
-class Request
+class RequestHandler
   attr_reader :request_lines
   def initialize
   @request_lines = []
@@ -10,4 +10,6 @@ class Request
     end
     request_lines
   end
+
+
 end

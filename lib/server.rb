@@ -1,6 +1,6 @@
 require 'socket'
-require './lib/request'
-require './lib/response'
+require './lib/request_handler'
+require './lib/response_handler'
 require 'pry'
 
 class Server
@@ -15,15 +15,19 @@ class Server
     loop do
       puts "Listening for requests..."
       @client = server.accept
-      request = Request.new
-      sent_request = request.send_request(@client)
-      puts "recieved request:\n#{request.request_lines.join("\n")}"
+      # send a request to the server
+      request_handler = RequestHandler.new
+      sent_request = request_handler.send_request(@client)
+      puts "recieved request:\n#{request_handler.request_lines.join("\n")}"
 
-      response = Response.new(sent_request, count)
-      client.puts response.send_output
-      client.puts response.send_response
+      #server sends back a response
+      response_handler = ResponseHandler.new(sent_request, count)
+      client.puts response_handler.send_output
+      client.puts response_handler.request_info
+      # client.puts response.send_response
       client.close
       @count += 1
+      # binding.pry
     end
   end
 end
