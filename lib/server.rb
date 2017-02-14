@@ -1,27 +1,61 @@
 require 'socket'
-require 'faraday'
+require './lib/request'
+require './lib/response'
 require 'pry'
 
-tcp_server = TCPServer.new(9292)
-count = 0
-
-while
-  client = tcp_server.accept
-  request_lines = []
-
-  while line = client.gets and !line.chomp.empty?
-    request_lines << line.chomp
+class Server
+  attr_reader :server, :client
+  attr_accessor :count
+  def initialize(port)
+    @server = TCPServer.new(port)
+    @count = 1
   end
 
-  response = "<pre>" + request_lines.join("\n") + "</pre>"
-  output = "<html><head>Hello, World! (#{count})</head><body>#{response}</body></html>"
-  headers = ["http/1.1 200 ok",
-            "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
-            "server: ruby",
-            "content-type: text/html; charset=iso-8859-1",
-            "content-length: #{output.length}\r\n\r\n"].join("\r\n")
-  client.puts headers
-  client.puts output
-  count += 1
-  client.close
+  def listen
+    loop do
+      puts "Listening for requests..."
+      @client = server.accept
+      request = Request.new
+      sent_request = request.send_request(@client)
+      puts "recieved request:\n#{request.request_lines.join("\n")}"
+
+      response = Response.new(sent_request, count)
+      client.puts response.send_output
+      client.puts response.send_response
+      client.close
+      @count += 1
+    end
+  end
 end
+
+Server.new(9292).listen
+
+
+
+
+
+
+
+# tcp_server = TCPServer.new(9292)
+# count = 0
+#
+# while
+#   client = tcp_server.accept
+#   request_lines = []
+#
+#   while line = client.gets and !line.chomp.empty?
+#     request_lines << line.chomp
+#   end
+#
+#   response = "<pre>" + request_lines.join("\n") + "</pre>"
+#   output = "<html><head>Hello, World! (#{count})</head><body>#{response}</body></html>"
+#   headers = ["http/1.1 200 ok",
+#             "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
+#             "server: ruby",
+#             "content-type: text/html; charset=iso-8859-1",
+#             "content-length: #{output.length}\r\n\r\n"].join("\r\n")
+#   client.puts headers
+#   client.puts output
+#   count += 1
+#   client.close
+# end
