@@ -10,6 +10,4 @@ class RequestHandler
     end
     request_lines
   end
-
-
 end

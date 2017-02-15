@@ -5,10 +5,11 @@ require 'pry'
 
 class Server
   attr_reader :server, :client
-  attr_accessor :count
+  attr_accessor :total_count, :server_close
   def initialize(port)
     @server = TCPServer.new(port)
-    @count = 1
+    @total_count = 1
+
   end
 
   def listen
@@ -17,49 +18,22 @@ class Server
       @client = server.accept
       # send a request to the server
       request_handler = RequestHandler.new
-      sent_request = request_handler.send_request(@client)
-      puts "recieved request:\n#{request_handler.request_lines.join("\n")}"
+      request_lines = request_handler.send_request(@client)
+      response_handler = ResponseHandler.new(total_count)
+      client.puts response_handler.headers(request_lines)
+      client.puts response_handler.parsed_response(request_lines)
+      if response_handler.close_server == true
+        break
+      end
 
-      #server sends back a response
-      response_handler = ResponseHandler.new(sent_request, count)
-      client.puts response_handler.send_output
-      client.puts response_handler.request_info
-      # client.puts response.send_response
+      #binding.pry
+      @total_count += 1
       client.close
-      @count += 1
-      # binding.pry
     end
+    puts "outside the loop!"
   end
 end
 
-Server.new(9292).listen
 
 
-
-
-
-
-
-# tcp_server = TCPServer.new(9292)
-# count = 0
-#
-# while
-#   client = tcp_server.accept
-#   request_lines = []
-#
-#   while line = client.gets and !line.chomp.empty?
-#     request_lines << line.chomp
-#   end
-#
-#   response = "<pre>" + request_lines.join("\n") + "</pre>"
-#   output = "<html><head>Hello, World! (#{count})</head><body>#{response}</body></html>"
-#   headers = ["http/1.1 200 ok",
-#             "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
-#             "server: ruby",
-#             "content-type: text/html; charset=iso-8859-1",
-#             "content-length: #{output.length}\r\n\r\n"].join("\r\n")
-#   client.puts headers
-#   client.puts output
-#   count += 1
-#   client.close
-# end
+# puts "recieved request:\n#{request_handler.request_lines.join("\n")}"
