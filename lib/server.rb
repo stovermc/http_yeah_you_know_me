@@ -20,8 +20,13 @@ class Server
       request_handler = RequestHandler.new
       request_lines = request_handler.send_request(@client)
       response_handler = ResponseHandler.new(total_count)
-      client.puts response_handler.headers(request_lines)
-      client.puts response_handler.parsed_response(request_lines)
+
+      response = response_handler.parsed_response(request_lines)
+      output = "<html><head></head><body>#{response}</body></html>"
+      headers = response_handler.headers(output)
+
+      client.puts headers
+      client.puts output
       if response_handler.close_server == true
         break
       end

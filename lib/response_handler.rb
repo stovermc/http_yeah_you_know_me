@@ -11,12 +11,12 @@ class ResponseHandler
    "<pre>" + request_lines.join("\n") + "</pre>"
   end
 
-  def headers(request_lines)
+  def headers(output)
      ["http/1.1 200 ok",
       "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
       "server: ruby",
       "content-type: text/html; charset=iso-8859-1",
-      "content-length: #{parsed_response(request_lines).length}\r\n\r\n"].join("\r\n")
+      "content-length: #{output.length}\r\n\r\n"].join("\r\n")
   end
 
   def parsed_response(request_lines)
@@ -45,6 +45,16 @@ class ResponseHandler
     elsif path == "/shutdown"
       @close_server = true
       "Total Requests: #{count}"
+    elsif path.include? ("word=")
+      search_word = path.split("=")[1]
+      dictionary = File.open("/usr/share/dict/words", "r").read.split("\n")
+      if dictionary.include? (search_word)
+        "#{search_word} is a known word"
+      else
+        "#{search_word} is not a known word"
+      end
+    elsif verb == "POST"
+
     end
   end
 end
