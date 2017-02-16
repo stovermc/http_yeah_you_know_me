@@ -5,23 +5,23 @@ require 'pry'
 
 class Server
   attr_reader :server, :client
-  attr_accessor :total_count, :server_close
+  attr_accessor :total_count, :hello_count, :server_close
   def initialize(port)
     @server = TCPServer.new(port)
     @total_count = 1
-
+    @hello_count = 1
   end
 
   def listen
     loop do
       puts "Listening for requests..."
       @client = server.accept
-      # send a request to the server
       request_handler = RequestHandler.new
-      request_lines = request_handler.send_request(@client)
-      response_handler = ResponseHandler.new(total_count)
+      request_hash = request_handler.retrieve_request_header(@client)
 
-      response = response_handler.parsed_response(request_lines)
+      response_handler = ResponseHandler.new(request_hash, total_count, hello_count, @client)
+      response = response_handler.parsed_response
+
       output = "<html><head></head><body>#{response}</body></html>"
       headers = response_handler.headers(output)
 
@@ -31,14 +31,11 @@ class Server
         break
       end
 
-      #binding.pry
+      if request_hash[:path].include? ("hello")
+        @hello_count += 1
+      end
       @total_count += 1
       client.close
     end
-    puts "outside the loop!"
   end
 end
-
-
-
-# puts "recieved request:\n#{request_handler.request_lines.join("\n")}"
